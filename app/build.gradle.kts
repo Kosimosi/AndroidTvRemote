@@ -18,7 +18,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "app.tellyscope"
+        applicationId = "com.custom.tvremote"
         // 26 (Android 8.0): java.time and adaptive icons without desugaring, ~97% of
         // phones in use. Kadb needs 23; the TV side has its own floor (wireless debugging is 11+).
         minSdk = 26
