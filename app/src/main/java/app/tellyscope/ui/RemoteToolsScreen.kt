@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import app.tellyscope.adb.StatsProfile
 import app.tellyscope.adb.TvFolder
 import app.tellyscope.data.DeviceState
+import app.tellyscope.data.resolve
 
 private enum class RemoteToolTab(val title: String) {
     Remote("Remote"),
