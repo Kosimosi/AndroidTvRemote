@@ -6,7 +6,7 @@
          hand-off to the first screen has no colour jump. installSplashScreen() swaps in Theme.Tellyscope. -->
     <style name="Theme.Tellyscope.Starting" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_animated</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_background</item>
         <item name="postSplashScreenTheme">@style/Theme.Tellyscope</item>
     </style>
