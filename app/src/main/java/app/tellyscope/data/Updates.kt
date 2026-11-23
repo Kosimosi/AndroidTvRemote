@@ -3,7 +3,7 @@
 package app.tellyscope.data
 
 /** Where releases are published: the app's own GitHub repo. */
-const val RELEASES = "https://github.com/man15h/tellyscope/releases"
+const val RELEASES = "https://github.com/Kosimosi/AndroidTvRemote/releases"
 
 /** A newer Tellyscope than the one running. [apk] is its release's APK link; null when the release has none this build can install. */
 data class Update(val version: String, val notes: String, val url: String, val apk: String? = null)
