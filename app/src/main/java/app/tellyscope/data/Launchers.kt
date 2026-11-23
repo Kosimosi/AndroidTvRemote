@@ -205,11 +205,25 @@ object SharedLists {
         refresh()
     }
 
-    /** The lists again; one already downloaded is read from the cache, so this is cheap once online. */
+    /** Load only this app's streaming metadata; never fetch Tellyscope's separate debloat-list repository. */
+    suspend fun loadRemoteOnly(data: DeviceLists) {
+        this.data = data
+        source = null
+        val cached = data.cachedSnapshot()
+        apply(cached, cached)
+        refresh()
+    }
+
+    /** Refresh app-owned metadata; the optional separate list source is used only by the full Tellyscope build. */
     suspend fun refresh() {
         val data = data ?: return
-        val source = source ?: return
-        apply(data.snapshot(), source.snapshot())
+        val source = source
+        if (source == null) {
+            val cached = data.cachedSnapshot()
+            apply(data.snapshot(), cached)
+        } else {
+            apply(data.snapshot(), source.snapshot())
+        }
     }
 
     /** A logo's PNG, at four times its size in dp; null until it can be had. */
