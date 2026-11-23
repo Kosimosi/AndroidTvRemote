@@ -218,16 +218,16 @@ object SharedLists {
     suspend fun refresh() {
         val data = data ?: return
         val source = source
+        val fresh = data.snapshot()
         if (source == null) {
-            val cached = data.cachedSnapshot()
-            apply(data.snapshot(), cached)
+            apply(fresh, fresh)
         } else {
-            apply(data.snapshot(), source.snapshot())
+            apply(fresh, source.snapshot())
         }
     }
 
     /** A logo's PNG, at four times its size in dp; null until it can be had. */
-    suspend fun logo(name: String): ByteArray? = source?.logo(name)
+    suspend fun logo(name: String): ByteArray? = source?.logo(name) ?: data?.logo(name)
 
     /** A launcher's icon or screenshot from `data/images/` ([KnownLauncher.icon], [KnownLauncher.screenshot]); null until it can be had. */
     suspend fun image(file: ListFile): ByteArray? = data?.image(file)
