@@ -79,9 +79,18 @@ fun RemoteToolsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            if (tab == RemoteToolTab.Install || tab == RemoteToolTab.Files) {
+            if (tab != RemoteToolTab.Monitor) {
                 TopAppBar(
-                    title = { Text(if (tab == RemoteToolTab.Install) "Install App" else "Files") },
+                    title = {
+                        Text(
+                            when (tab) {
+                                RemoteToolTab.Remote -> "TV Remote & Tools"
+                                RemoteToolTab.Install -> "Install App"
+                                RemoteToolTab.Files -> "Files"
+                                RemoteToolTab.Monitor -> "Advanced Monitor"
+                            },
+                        )
+                    },
                     actions = { TextButton(onClick = onSwitchTv) { Text("Change TV") } },
                 )
             }
