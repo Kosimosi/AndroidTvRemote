@@ -289,6 +289,7 @@ fun TellyscopeApp(vm: TellyscopeViewModel) {
             ),
             onShowStats = vm::showStats,
             onSwitchTv = { adding = true; vm.rescan() },
+            onReconnect = { vm.reconnect(state.selectedId!!) },
             onPickApp = { pickApp.launch(InDownloads.APPS) },
             installActions = installActions,
             onFolder = vm::folder,
