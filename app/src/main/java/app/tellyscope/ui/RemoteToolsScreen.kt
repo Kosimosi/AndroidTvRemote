@@ -2,6 +2,7 @@
 
 package app.tellyscope.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -37,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.tellyscope.adb.StatsProfile
 import app.tellyscope.adb.TvFolder
@@ -59,6 +63,7 @@ fun RemoteToolsScreen(
     remoteActions: RemoteActions,
     onShowStats: (StatsProfile) -> Unit,
     onSwitchTv: () -> Unit,
+    onReconnect: () -> Unit,
     onPickApp: () -> Unit,
     installActions: DeviceActions,
     onFolder: (TvFolder) -> Unit,
@@ -77,10 +82,12 @@ fun RemoteToolsScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFF0B0609),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             if (tab != RemoteToolTab.Monitor) {
                 TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xCC180A0F), titleContentColor = Color(0xFFFFE9ED)),
                     title = {
                         Text(
                             when (tab) {
@@ -91,12 +98,15 @@ fun RemoteToolsScreen(
                             },
                         )
                     },
-                    actions = { TextButton(onClick = onSwitchTv) { Text("Change TV") } },
+                    actions = {
+                        if (device.state == DeviceState.Offline) Button(onClick = onReconnect) { Text("Reconnect") }
+                        TextButton(onClick = onSwitchTv) { Text("Change TV") }
+                    },
                 )
             }
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(containerColor = Color(0xDD180A0F), contentColor = Color(0xFFFFE9ED)) {
                 RemoteToolTab.entries.forEach { destination ->
                     val icon = when (destination) {
                         RemoteToolTab.Remote -> Icons.Default.Home
@@ -115,7 +125,7 @@ fun RemoteToolsScreen(
         },
     ) { padding ->
         when (tab) {
-            RemoteToolTab.Remote -> Box(Modifier.fillMaxSize().padding(padding)) {
+            RemoteToolTab.Remote -> Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF35101B), Color(0xFF0B0609)))).padding(padding)) {
                 RemoteScreen(
                     state = state,
                     actions = remoteActions,
@@ -123,7 +133,7 @@ fun RemoteToolsScreen(
                     fullScreen = true,
                 )
             }
-            RemoteToolTab.Monitor -> Box(Modifier.fillMaxSize().padding(padding)) {
+            RemoteToolTab.Monitor -> Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF35101B), Color(0xFF0B0609)))).padding(padding)) {
                 AdvancedScreen(
                     state = state,
                     back = { tab = RemoteToolTab.Remote },
