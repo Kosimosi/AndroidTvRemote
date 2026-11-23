@@ -141,7 +141,7 @@ class AdbDeviceSource(
 
     init {
         Connector.init(File(appContext.filesDir, "adbkey.pem"))
-        scope.launch(Dispatchers.IO) { SharedLists.load(data, lists) }
+        scope.launch(Dispatchers.IO) { SharedLists.loadRemoteOnly(data) }
     }
 
     /** Remembered TVs reconnect in the background from launch; [known] waits for the file read. */
