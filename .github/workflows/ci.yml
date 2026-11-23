@@ -1,4 +1,4 @@
-name: CI
+name: Build TV Remote APK
 
 on:
   pull_request:
@@ -14,29 +14,30 @@ concurrency:
 
 jobs:
   build:
-    name: Build, unit tests, lint
+    name: Build GitHub debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
-      # JDK 25: Kadb ships Java 25 bytecode, so :adb tests need a 25 runtime.
+      # JDK 25 is required by Kadb's Java 25 bytecode.
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 25
 
+      # GitHub-hosted Android runners provide the Android SDK used by AGP.
       - uses: gradle/actions/setup-gradle@v6
 
-      # build = assemble (debug + release) + unit tests + Android lint
-      - run: ./gradlew build --console=plain
+      # Deliberately assemble only the GitHub debug APK; no Debloat/Tweaks tests,
+      # screenshot tests, lint, release signing or APK-size gates are part of this job.
+      - name: Assemble GitHub debug APK
+        run: ./gradlew :app:assembleGithubDebug --console=plain
 
-      - name: Upload reports on failure
-        if: failure()
-        uses: actions/upload-artifact@v7
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
         with:
-          name: reports
-          path: |
-            **/build/reports/
-            **/build/test-results/
-          retention-days: 7
+          name: TV-Remote-Tools-debug
+          path: app/build/outputs/apk/github/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
