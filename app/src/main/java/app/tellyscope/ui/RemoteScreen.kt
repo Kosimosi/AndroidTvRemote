@@ -245,6 +245,7 @@ fun RemoteScreen(
     state: UiState,
     actions: RemoteActions,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    fullScreen: Boolean = false,
 ) {
     val device = state.selected ?: return
     val restart = state.restarting[device.id]
@@ -298,10 +299,7 @@ fun RemoteScreen(
     val streamingApps = remember(state.device.apps, services) { RemoteButtons.streamingApps(state.device.apps, services) }
     if (picking) OpenAppSheet(name(device), streamingApps, services, onOpen = { picking = false; actions.launch(Docked(it.packageName, it.label)) }, onDismiss = { picking = false })
 
-    ModalBottomSheet(
-        onDismissRequest = actions.back,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
+    val remoteContent: @Composable () -> Unit = {
         // The sheet is its own window, so the text box's focus lives here, not in the screen's.
         val focus = LocalFocusManager.current
         // A tap on empty space puts the keyboard away once the finger lifts. Keys and buttons consume
@@ -417,6 +415,14 @@ fun RemoteScreen(
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
         }
+    }
+    if (fullScreen) {
+        Surface(Modifier.fillMaxSize()) { remoteContent() }
+    } else {
+        ModalBottomSheet(
+            onDismissRequest = actions.back,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) { remoteContent() }
     }
 }
 
