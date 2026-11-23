@@ -3,6 +3,7 @@
 package app.tellyscope.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -103,19 +104,23 @@ fun RemoteToolsScreen(
         },
     ) { padding ->
         when (tab) {
-            RemoteToolTab.Remote -> RemoteScreen(
-                state = state,
-                actions = remoteActions,
-                snackbar = snackbar,
-                fullScreen = true,
-            )
-            RemoteToolTab.Monitor -> AdvancedScreen(
-                state = state,
-                back = { tab = RemoteToolTab.Remote },
-                terminal = terminal,
-                snackbar = snackbar,
-                showShell = false,
-            )
+            RemoteToolTab.Remote -> Box(Modifier.fillMaxSize().padding(padding)) {
+                RemoteScreen(
+                    state = state,
+                    actions = remoteActions,
+                    snackbar = snackbar,
+                    fullScreen = true,
+                )
+            }
+            RemoteToolTab.Monitor -> Box(Modifier.fillMaxSize().padding(padding)) {
+                AdvancedScreen(
+                    state = state,
+                    back = { tab = RemoteToolTab.Remote },
+                    terminal = terminal,
+                    snackbar = snackbar,
+                    showShell = false,
+                )
+            }
             RemoteToolTab.Install -> InstallAppPage(
                 state = state,
                 padding = padding,
