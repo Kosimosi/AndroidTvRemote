@@ -72,6 +72,7 @@ import app.tellyscope.ui.LoggedOutScreen
 import app.tellyscope.ui.PermissionScreen
 import app.tellyscope.ui.RemoteActions
 import app.tellyscope.ui.RemoteScreen
+import app.tellyscope.ui.RemoteToolsScreen
 import app.tellyscope.ui.ReportKind
 import app.tellyscope.ui.ReportScreen
 import app.tellyscope.ui.RowState
@@ -190,62 +191,31 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TellyscopeApp(vm: TellyscopeViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val browser = LocalUriHandler.current
     val context = LocalContext.current
-    val res = LocalResources.current
     val snackbar = remember { SnackbarHostState() }
     var adding by rememberSaveable { mutableStateOf(false) }
-    var remote by rememberSaveable { mutableStateOf(false) }
-    var advanced by rememberSaveable { mutableStateOf(false) }
-    var history by rememberSaveable { mutableStateOf(false) }
-    var resetting by rememberSaveable { mutableStateOf(false) }
-    // The TV's page comes back on the tab it was left on, from History or any screen its menu opens.
-    var tvTab by rememberSaveable { mutableStateOf(TvTab.Overview) }
-    var debloat by rememberSaveable { mutableStateOf(false) }
-    var settings by rememberSaveable { mutableStateOf(false) }
-    var whatsNew by rememberSaveable { mutableStateOf(false) }
-    var access by rememberSaveable { mutableStateOf(false) }
-    // Connect again from the logged-out page: which TV, and since when, for its Allow screen.
     var rejoinId by rememberSaveable { mutableStateOf<String?>(null) }
     var rejoinSince by rememberSaveable { mutableStateOf(0L) }
 
     val pickApp = rememberLauncherForActivityResult(InDownloads.Multiple()) { vm.pickedApp(it) }
-    val pickLauncherApk = rememberLauncherForActivityResult(InDownloads.One()) { uri -> uri?.let(vm::pickedLauncherApk) }
     val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::push) }
     val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream"), vm::saveTo)
-    val saveScreenshot = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png"), vm::screenshotTo)
 
-    state.update?.let { u ->
-        UpdateDialog(
-            u,
-            onDownload = { vm.updateLater(); u.apk?.let { runCatching { browser.openUri(it) } } },
-            onRelease = { vm.updateLater(); runCatching { browser.openUri(u.url) } },
-            onCancel = vm::updateLater,
-        )
-    }
-
-    // On every return to the app, not just a cold start; the check itself enforces the interval.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.checkForUpdate() }
-    // In the background nothing reads the TVs or sweeps the LAN; back on screen, everything picks up again.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.resume() }
 
     Snackbars(snackbar, vm.done, vm.notice, vm::doneShown, vm::noticeShown) { vm.undo(it.entry, it.deviceId) }
     LoggedOutSnackbars(snackbar, { state.devices }, { state.selectedId }, onView = vm::select)
 
-    // A newly connected TV becomes the selection; leave the add flow then, not on tap.
-    LaunchedEffect(state.selectedId) { adding = false; remote = false; advanced = false; history = false; resetting = false; debloat = false; settings = false; whatsNew = false; access = false; rejoinId = null }
-    // Logged out mid-screen: the page takes over, and the TV comes back on Overview once allowed again.
-    val loggedOutAt = state.selected?.loggedOutAt
-    LaunchedEffect(loggedOutAt) { if (loggedOutAt != null) { remote = false; advanced = false; history = false; resetting = false; debloat = false; settings = false; whatsNew = false; access = false } }
-    // The Allow screen while the TV is asked; allowed lands on Overview, a Deny there is a plain refusal (its card).
-    val rejoining = state.selected?.takeIf { it.id == rejoinId && it.state == DeviceState.Waiting }
-    LaunchedEffect(state.selected?.state, loggedOutAt) {
-        val st = state.selected?.state
-        if (st == DeviceState.Online || (st == DeviceState.NotAllowed && loggedOutAt == null)) rejoinId = null
+    LaunchedEffect(state.selectedId) {
+        adding = false
+        rejoinId = null
     }
-
     LaunchedEffect(adding) { vm.addingTv(adding) }
+
+    val loggedOutAt = state.selected?.loggedOutAt
+    val rejoining = state.selected?.takeIf { it.id == rejoinId && it.state == DeviceState.Waiting }
+
     if (state.selected == null || adding) {
         BackHandler(enabled = adding) { adding = false }
         ScanScreen(
@@ -261,9 +231,6 @@ fun TellyscopeApp(vm: TellyscopeViewModel) {
             phoneKey = remember { Connector.fingerprint() },
             onLeave = vm::leaveConnect,
         )
-    } else if (state.report != null) {
-        BackHandler { vm.closeReport() }
-        state.report?.let { ReportScreen(it, onOpened = vm::reportOpened, close = vm::closeReport) }
     } else if (rejoining != null) {
         val cancel = { vm.cancelReconnect(rejoining.id); rejoinId = null }
         BackHandler(onBack = cancel)
@@ -281,7 +248,6 @@ fun TellyscopeApp(vm: TellyscopeViewModel) {
         )
     } else if (state.selected != null && loggedOutAt != null) {
         val selected = state.selected!!
-        // Back to TVs: another remembered TV, online ones first, else the scan list.
         val back = {
             val other = state.devices.filter { it.id != selected.id }
             val next = other.firstOrNull { it.state == DeviceState.Online } ?: other.firstOrNull()
@@ -295,177 +261,42 @@ fun TellyscopeApp(vm: TellyscopeViewModel) {
             onConnect = { rejoinId = selected.id; rejoinSince = System.currentTimeMillis(); vm.reconnect(selected.id) },
             onBack = back,
         )
-    } else if (advanced) {
-        BackHandler { advanced = false }
-        DisposableEffect(Unit) {
-            vm.showStats(StatsProfile.ADVANCED)
-            onDispose { vm.showStats(StatsProfile.OTHER) }
-        }
-        AdvancedScreen(state, back = { advanced = false }, terminal = remember(state.selectedId) { vm.terminal() }, snackbar = snackbar)
-    } else if (history) {
-        BackHandler { history = false }
-        // Seen on the way in, and again on the way out for changes made here, so ⋮ has no dot for them.
-        DisposableEffect(Unit) {
-            vm.historyOpened()
-            onDispose { vm.historyOpened() }
-        }
-        HistoryScreen(state, onUndo = vm::undo, onRestoreAll = vm::restoreAll, back = { history = false }, snackbar = snackbar)
-    } else if (resetting && state.device.reset != null) {
-        val close = { vm.closeReset(); resetting = false }
-        // Leaving mid-run only closes the screen; the run goes on, and History has it when done.
-        BackHandler(onBack = close)
-        ResetScreen(
-            state,
-            ResetActions(reset = { vm.runReset() }, retry = { vm.runReset(retry = true) }, reload = vm::openReset, back = close),
-        )
-    } else if (access || state.device.removal != null) {
-        // A removal started from the warning opens this screen too, and back steps out of it first.
-        BackHandler { if (state.device.removal != null) vm.closeRemoval() else access = false }
-        AccessScreen(state, accessActions(vm) { access = false }, snackbar = snackbar)
-    } else if (whatsNew) {
-        BackHandler { whatsNew = false }
-        LaunchedEffect(state.available) { vm.loadNewer() }
-        WhatsNewScreen(rememberChangelog(), back = { whatsNew = false }, available = state.available, newer = state.newer, onUpdate = vm::reopenUpdate)
-    } else if (settings) {
-        BackHandler { settings = false }
-        SettingsScreen(
-            state.listSource,
-            onListSource = vm::setListSource,
-            checkUpdates = state.checkUpdates,
-            alphaBuild = state.alphaBuild,
-            onCheckUpdates = vm::setCheckUpdates,
-            keyHaptics = state.keyHaptics,
-            onKeyHaptics = vm::setKeyHaptics,
-            onReport = { vm.openReport(ReportKind.Problem) },
-            onWhatsNew = { whatsNew = true },
-            back = { settings = false },
-            snackbar = snackbar,
-        )
-    } else if (state.device.launcher != null) {
-        BackHandler { vm.closeLauncherFlow() }
-        LauncherScreen(
-            state.selected!!, state.device.launcher!!, state.device.apps,
-            LauncherActions(
-                close = vm::closeLauncherFlow,
-                install = vm::installLauncher,
-                chooseAnother = vm::pickLauncher,
-                switch = vm::switchToLauncher,
-                makeHome = vm::makeHome,
-                open = vm::openLauncher,
-                later = vm::launcherLater,
-                fireCheck = vm::checkLauncherApk,
-                fireChoose = vm::chooseFireLauncher,
-                fireTrust = vm::trustLauncherList,
-                fireInstall = vm::installLauncherApk,
-                fireDismiss = vm::dismissLauncherApk,
-                firePick = { pickLauncherApk.launch(arrayOf(InDownloads.APK)) },
-            ),
-            snackbar = snackbar,
-            direct = vm.directDownload,
-            play = BuildConfig.PLAY,
-        )
-    } else if (debloat && state.device.debloat != null) {
-        // Leaving mid-run only closes the screen; the run goes on, and History has each app.
-        DebloatRunScreen(state.device.debloat!!, back = { vm.closeDebloat(); debloat = false }, retry = vm::retryDebloat)
-    } else if (debloat) {
-        // Its own back handler closes the list search before leaving.
-        DebloatScreen(
-            state.device.lists,
-            onPick = vm::pickList,
-            onDisable = vm::disableSuggested,
-            back = { debloat = false },
-            snackbar = snackbar,
-            source = state.listSource,
-            tvMakers = listOfNotNull(state.selected?.brand, state.selected?.manufacturer).distinct(),
-            tv = state.selected,
-            tvApps = state.device.apps,
-            busy = state.device.busy != null,
-            onHelpAdd = { vm.openReport(ReportKind.NewTv) },
-        )
     } else {
-        DeviceTabsScreen(
+        DisposableEffect(state.selectedId) { onDispose { vm.closeRemote() } }
+        val installActions = DeviceActions(
+            allowDowngrade = vm::allowDowngrade,
+            install = vm::install,
+            closeSideload = vm::closeSideload,
+            reportInstall = { vm.closeSideload() },
+            openInstalled = vm::openInstalled,
+        )
+        RemoteToolsScreen(
             state = state,
             snackbar = snackbar,
-            startTab = tvTab,
-            onTab = { tvTab = it },
-            actions = DeviceActions(
-                select = vm::select,
-                addDevice = { adding = true; vm.rescan() },
-                settings = { settings = true },
-                query = vm::query,
-                propose = vm::propose,
-                open = vm::openApp,
-                confirm = vm::confirm,
-                confirmHome = vm::confirmHome,
-                cancel = vm::cancel,
-                homeServiceOn = vm::homeServiceOn,
-                dismissServiceNote = vm::dismissServiceNote,
-                installLauncher = vm::openLauncherFlow,
-                hideLauncherCard = vm::hideLauncherCard,
-                debloatGateOff = vm::debloatGateOff,
-                undo = vm::undo,
-                reconnect = { state.selectedId?.let(vm::reconnect) },
-                openWifi = { context.openWifiSettings() },
-                forget = vm::forget,
-                rename = vm::rename,
-                restoreAll = vm::restoreAll,
-                pickApp = { pickApp.launch(InDownloads.APPS) },
-                allowDowngrade = vm::allowDowngrade,
-                install = vm::install,
-                closeSideload = vm::closeSideload,
-                reportInstall = { s ->
-                    vm.closeSideload()
-                    vm.openReport(ReportKind.Problem, s.app?.let { res.getString(R.string.vm_report_tried_install, it.label, it.info.versionName.orEmpty()).trim() }.orEmpty(), s.detail)
-                },
-                openInstalled = vm::openInstalled,
-                folder = vm::folder,
-                pickFile = { folder -> vm.folder(folder); pickFile.launch(arrayOf("*/*")) },
-                saveFile = { f -> vm.saving(f); saveFile.launch(f.name) },
-                cancelTransfer = vm::cancelTransfer,
-                remote = { remote = true },
-                // A run that finished while Debloat was closed is done with.
-                debloat = { vm.closeDebloat(); debloat = true },
-                advanced = { advanced = true },
-                history = { history = true },
-                reset = { vm.openReset(); resetting = true },
-                checkUpdates = vm::checkUpdates,
-                openStore = vm::openStore,
-                turnOnStore = vm::turnOnStore,
-                setDns = vm::setDns,
-                setFastAnimations = vm::setFastAnimations,
-                clearCaches = vm::clearCaches,
-                screenshot = { saveScreenshot.launch(Copy.screenshotName(System.currentTimeMillis())) },
-                answerRequest = vm::answerRequest,
-                dismissRequest = vm::dismissRequest,
-                closeAlert = vm::closeAlert,
-                foldSystem = vm::foldSystem,
-                showStats = vm::showStats,
-                whoHasAccess = { access = true },
-                access = accessActions(vm) { access = false },
+            remoteActions = RemoteActions(
+                press = vm::press,
+                type = vm::type,
+                reboot = vm::reboot,
+                back = {},
+                retryRestart = vm::retryRestart,
+                stopWaiting = vm::stopWaiting,
+                launch = vm::launch,
+                setDock = vm::setDock,
+                screenOff = vm::setScreenOff,
+                screenOffTipSeen = vm::screenOffTipSeen,
+                checkVolume = vm::checkVolume,
+                touchpad = vm::setTouchpad,
             ),
+            onShowStats = vm::showStats,
+            onSwitchTv = { adding = true; vm.rescan() },
+            onPickApp = { pickApp.launch(InDownloads.APPS) },
+            installActions = installActions,
+            onFolder = vm::folder,
+            onPickFile = { folder -> vm.folder(folder); pickFile.launch(arrayOf("*/*")) },
+            onSaveFile = { file -> vm.saving(file); saveFile.launch(file.name) },
+            onCancelTransfer = vm::cancelTransfer,
+            terminal = null,
         )
-        // A sheet over the TV's page, so the page stays where it was underneath; Back or a drag closes it.
-        if (remote) {
-            DisposableEffect(Unit) { onDispose { vm.closeRemote() } }
-            RemoteScreen(
-                state = state,
-                snackbar = snackbar,
-                actions = RemoteActions(
-                    press = vm::press,
-                    type = vm::type,
-                    reboot = vm::reboot,
-                    back = { remote = false },
-                    retryRestart = vm::retryRestart,
-                    stopWaiting = vm::stopWaiting,
-                    launch = vm::launch,
-                    setDock = vm::setDock,
-                    screenOff = vm::setScreenOff,
-                    screenOffTipSeen = vm::screenOffTipSeen,
-                    checkVolume = vm::checkVolume,
-                    touchpad = vm::setTouchpad,
-                ),
-            )
-        }
     }
 }
 
