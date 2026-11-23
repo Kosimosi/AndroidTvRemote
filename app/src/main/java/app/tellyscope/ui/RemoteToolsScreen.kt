@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
@@ -102,7 +101,7 @@ fun RemoteToolsScreen(
                         RemoteToolTab.Remote -> Icons.Default.Home
                         RemoteToolTab.Monitor -> Icons.Default.Info
                         RemoteToolTab.Install -> Icons.Default.Add
-                        RemoteToolTab.Files -> Icons.Default.Folder
+                        RemoteToolTab.Files -> Icons.Default.Info
                     }
                     NavigationBarItem(
                         selected = tab == destination,
