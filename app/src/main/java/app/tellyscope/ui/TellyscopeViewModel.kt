@@ -833,8 +833,7 @@ class TellyscopeViewModel(
                 updateDevice(id) { it.copy(apps = read, appsLoading = false) }
                 apps.complete(read)
                 pruneDock(id, read)
-                val tweaks = source.tweaks(id)
-                updateDevice(id) { it.copy(tweaks = tweaks) }
+                // This fork has no Tweaks surface, so do not poll or expose TV tweak settings.
                 loadFiles()
                 while (true) {
                     val net = source.network(id)
