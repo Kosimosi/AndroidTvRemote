@@ -1,38 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A telescope whose wide end is a TV screen. The art is scaled to 72% about the centre so it stays inside the 66 dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group android:translateX="51" android:translateY="56">
-        <group android:scaleX="0.72" android:scaleY="0.72">
+    <group android:name="retro_logo" android:translateX="54" android:translateY="54">
+        <group android:scaleX="0.82" android:scaleY="0.82">
             <group android:translateX="-54" android:translateY="-54">
-                <!-- Stand -->
-                <path
-                    android:strokeColor="#FFFFFFFF"
-                    android:strokeWidth="4.5"
-                    android:strokeLineCap="round"
-                    android:pathData="M50,62L40,84M50,62L60,84" />
-                <group android:rotation="-30" android:pivotX="54" android:pivotY="54">
-                    <!-- Eyepiece -->
-                    <path
-                        android:fillColor="#FFFFFFFF"
-                        android:pathData="M18.5,50h4a2.5,2.5 0,0 1,2.5 2.5v4a2.5,2.5 0,0 1,-2.5 2.5h-4a2.5,2.5 0,0 1,-2.5 -2.5v-4a2.5,2.5 0,0 1,2.5 -2.5z" />
-                    <!-- Tube -->
-                    <path
-                        android:fillColor="#FFFFFFFF"
-                        android:strokeColor="#FFFFFFFF"
-                        android:strokeWidth="3"
-                        android:strokeLineJoin="round"
-                        android:pathData="M28,49.5L52,46v17l-24,-3.5z" />
-                    <!-- Screen -->
-                    <path
-                        android:fillColor="#FF9CF1F2"
-                        android:strokeColor="#FFFFFFFF"
-                        android:strokeWidth="5"
-                        android:pathData="M63.5,40h21a4.5,4.5 0,0 1,4.5 4.5v20a4.5,4.5 0,0 1,-4.5 4.5h-21a4.5,4.5 0,0 1,-4.5 -4.5v-20a4.5,4.5 0,0 1,4.5 -4.5z" />
-                </group>
+                <path android:fillColor="#FFFF0808" android:pathData="M18,29 C28,17 40,10 54,10 C68,10 80,17 90,29 C91,30 91,32 89,34 L83,40 C81,42 79,41 77,39 C71,32 63,28 54,28 C45,28 37,32 31,39 C29,41 27,42 25,40 L19,34 C17,32 17,30 18,29 Z" />
+                <path android:fillColor="#FFFF0808" android:pathData="M30,42 C36,35 44,31 54,31 C64,31 72,35 78,42 C80,44 80,46 78,48 L72,54 C70,56 68,55 66,53 C63,50 59,48 54,48 C49,48 45,50 42,53 C40,55 38,56 36,54 L30,48 C28,46 28,44 30,42 Z" />
+                <path android:fillColor="#FFFF0808" android:pathData="M42,56 C45,52 49,50 54,50 C59,50 63,52 66,56 C68,58 68,60 66,62 L56,72 C55,73 53,73 52,72 L42,62 C40,60 40,58 42,56 Z" />
+                <path android:fillColor="#FFFF0808" android:pathData="M15,39 L34,58 C29,67 29,77 34,86 L15,105 C2,87 2,57 15,39 Z" />
+                <path android:fillColor="#FFFF0808" android:pathData="M93,39 C106,57 106,87 93,105 L74,86 C79,77 79,67 74,58 Z" />
+                <path android:fillColor="#FFFF0808" android:pathData="M39,90 C48,95 60,95 69,90 L88,109 C68,124 40,124 20,109 Z" />
             </group>
         </group>
     </group>
