@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -50,6 +51,7 @@ private enum class RemoteToolTab(val title: String) {
 }
 
 /** The deliberately small connected-TV surface: Remote first, with only the three requested tools beside it. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RemoteToolsScreen(
     state: UiState,
