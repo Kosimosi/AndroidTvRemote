@@ -103,6 +103,7 @@ fun AdvancedScreen(
     back: () -> Unit,
     terminal: ShellTerminal? = null,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    showShell: Boolean = terminal != null,
 ) {
     val device = state.selected ?: return
     val ui = state.device
@@ -130,7 +131,7 @@ fun AdvancedScreen(
             },
         ) { pad ->
             Column(Modifier.fillMaxSize().padding(pad)) {
-                Header(state, Modifier.padding(horizontal = 16.dp), onShell = { shellFrom = it; shellOpen = true })
+                Header(state, Modifier.padding(horizontal = 16.dp), showShell = showShell, onShell = { shellFrom = it; shellOpen = true })
                 val tabs = listOf(R.string.advanced_this_tv, R.string.advanced_cpu, R.string.advanced_ram, R.string.advanced_network)
                 PrimaryTabRow(selectedTabIndex = tab, Modifier.padding(top = 12.dp)) {
                     tabs.forEachIndexed { i, label ->
@@ -194,7 +195,7 @@ private fun appRows(apps: List<AppInfo>, procs: List<Proc>, network: NetworkInfo
  * with the Shell button. [onShell] gets the button's centre in the root, where Shell grows from.
  */
 @Composable
-private fun Header(state: UiState, modifier: Modifier, onShell: (Offset) -> Unit) {
+private fun Header(state: UiState, modifier: Modifier, showShell: Boolean, onShell: (Offset) -> Unit) {
     val device = state.selected ?: return
     val c = MaterialTheme.colorScheme
     val clipboard = LocalClipboardManager.current
@@ -213,14 +214,16 @@ private fun Header(state: UiState, modifier: Modifier, onShell: (Offset) -> Unit
                     }
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            Button(
-                onClick = { onShell(center) },
-                modifier = Modifier.onGloballyPositioned { center = it.boundsInRoot().center },
-            ) {
-                Icon(TerminalIcon, null, Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.shell_open))
+            if (showShell) {
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = { onShell(center) },
+                    modifier = Modifier.onGloballyPositioned { center = it.boundsInRoot().center },
+                ) {
+                    Icon(TerminalIcon, null, Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.shell_open))
+                }
             }
         }
     }
