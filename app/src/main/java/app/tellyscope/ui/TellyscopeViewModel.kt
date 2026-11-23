@@ -1639,13 +1639,11 @@ class TellyscopeViewModel(
         }
     }
 
+    /** Debloat lists are intentionally not loaded by the remote-only app. */
     private suspend fun loadLists(id: String, apps: suspend () -> List<AppInfo>) {
-        val lists = source.suggestions(id, apps)
-        // Once the list is known its keep entries show as protected, without reading the TV again.
-        val keep = (lists as? Suggestions.Ready)?.list?.keep.orEmpty()
         _state.update { s ->
-            if (s.selectedId != id) s
-            else s.copy(device = s.device.copy(lists = lists, apps = s.device.apps.map { it.copy(listKeep = it.packageName in keep) }))
+            if (s.selectedId == id) s.copy(device = s.device.copy(lists = null))
+            else s
         }
     }
 
